@@ -6,12 +6,22 @@
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
     "start": "wrangler dev",
-    "cf-typegen": "wrangler types"
+    "types": "wrangler types",
+    "agent:dev": "tsx src/main.ts dev",
+    "agent:start": "tsx src/main.ts start"
   },
   "dependencies": {
-    "chanfana": "^3.3.0",
     "hono": "^4.12.12",
-    "zod": "^4.3.6"
+    "zod": "^4.3.6",
+    "@livekit/agents": "^1.8.1",
+    "@livekit/agents-plugin-deepgram": "^1.9.0",
+    "@livekit/agents-plugin-google": "^1.9.0",
+    "@livekit/agents-plugin-inworld": "^1.9.0",
+    "@livekit/agents-plugin-silero": "^1.9.0",
+    "@livekit/plugins-ai-coustics": "^0.3.2",
+    "livekit-server-sdk": "^2.19.0",
+    "dotenv": "^17.4.2",
+    "tsx": "^4.23.0"
   },
   "devDependencies": {
     "@types/node": "^25.9.8",
