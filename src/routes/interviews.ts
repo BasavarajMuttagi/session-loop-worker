@@ -15,7 +15,7 @@ import {
   createRetrySession,
   maskQuestionsForClient,
 } from "../services/interviewService";
-import { getCandidateId } from "../middlewares/auth";
+import { getCandidateId, isInternalAgentRequest } from "../middlewares/auth";
 
 export const interviewsRouter = new Hono<{ Bindings: Env }>();
 
@@ -186,24 +186,25 @@ interviewsRouter.get("/", async (c) => {
  */
 interviewsRouter.get("/:id", async (c) => {
   const id = c.req.param("id");
+  const isInternal = isInternalAgentRequest(c);
   const candidateId = await getCandidateId(c);
 
-  if (!candidateId) {
+  if (!isInternal && !candidateId) {
     throw new HTTPException(401, {
       message: "Unauthorized: Candidate identity required",
     });
   }
 
   const db = getDb(c.env.DB);
+  const conditions = [eq(interviewAttempts.id, id)];
+  if (!isInternal && candidateId) {
+    conditions.push(eq(interviewAttempts.candidateId, candidateId));
+  }
+
   const [record] = await db
     .select()
     .from(interviewAttempts)
-    .where(
-      and(
-        eq(interviewAttempts.id, id),
-        eq(interviewAttempts.candidateId, candidateId)
-      )
-    );
+    .where(and(...conditions));
 
   if (!record) {
     throw new HTTPException(404, { message: "Interview session not found" });
@@ -217,6 +218,13 @@ interviewsRouter.get("/:id", async (c) => {
   const session = liveState?.interview || record.sessionData;
   if (!session) {
     return c.json({ record, liveState });
+  }
+
+  if (isInternal) {
+    return c.json({
+      record,
+      liveState,
+    });
   }
 
   const { session: maskedSession, totalQuestions } = maskQuestionsForClient(

@@ -23,3 +23,16 @@ export async function getCandidateId(c: Context): Promise<string | null> {
 
   return null;
 }
+
+/**
+ * Checks if request is an authenticated internal call from the LiveKit agent runner.
+ */
+export function isInternalAgentRequest(c: Context): boolean {
+  const secretHeader = c.req.header("x-internal-secret");
+  const expectedSecret =
+    (c.env as any)?.INTERNAL_SECRET ||
+    process.env.INTERNAL_SECRET ||
+    "session-loop-secret";
+  return !!secretHeader && secretHeader === expectedSecret;
+}
+
