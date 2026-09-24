@@ -7,11 +7,9 @@ import {
 } from '@livekit/agents'
 import * as deepgram from '@livekit/agents-plugin-deepgram'
 import * as google from '@livekit/agents-plugin-google'
-import * as inworld from '@livekit/agents-plugin-inworld'
-import { fileURLToPath } from 'node:url'
 import dotenv from 'dotenv'
-
-dotenv.config()
+import { fileURLToPath } from 'node:url'
+dotenv.config({ path: ['.env', '.env.local'] })
 
 
 export default defineAgent({
@@ -21,28 +19,22 @@ export default defineAgent({
             turnHandling: {
                 turnDetection: "vad"
             },
-            stt: new deepgram.STT({
-                model: 'nova-3',
-                language: 'multi',
+            // 1. Deepgram Flux STT (Real-time Speech-to-Text)
+            stt: new deepgram.STTv2({
+                model: 'flux-general-en',
                 apiKey: process.env.DEEPGRAM_API_KEY!,
-                interimResults: true,
-                smartFormat: true,
-
             }),
+            // 2. Google Gemini Flash Lite for LLM 🧠
             llm: new google.LLM({
-                model: 'gemini-flash-lite-latest', // Stable, active model endpoint
+                model: 'gemini-flash-lite-latest',
                 apiKey: process.env.GOOGLE_API_KEY!,
-                temperature: 0.7,
-                maxOutputTokens: 1024,
             }),
-            tts: new inworld.TTS({
-                model: 'inworld-tts-1.5-max',
-                voice: 'Ashley',
-                apiKey: process.env.INWORLD_API_KEY!,
-                temperature: 1.1,
-                speakingRate: 1.0,
+            // 3. Live Streaming TTS (Deepgram Aura-2)
+            tts: new deepgram.TTS({
+                model: 'aura-2-asteria-en',
+                apiKey: process.env.DEEPGRAM_API_KEY!,
             }),
-        })
+        });
 
         await ctx.connect()
         console.log(`Connected to room: ${ctx.room.name}`)
